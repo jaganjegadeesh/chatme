@@ -119,6 +119,24 @@ class Db {
         .doc(messageId)
         .delete();
   }
+
+  static Future<Map<String, String>?> getProductData() async {
+    var cn = await connect();
+    final String? id = cn.getString('product_id');
+
+    if (id != null) {
+      return {
+        'product_id': id,
+      };
+    } else {
+      return null;
+    }
+  }
+
+  static Future setProductId({required String model}) async {
+    var cn = await connect();
+    cn.setString('product_id', model);
+  }
 }
 
 class LoginModel {
@@ -188,5 +206,37 @@ class UserModel {
   @override
   String toString() {
     return 'UserModel(userId: $userId, name: $name, email: $email, phone: $phone,  dob: $dob,  gender: $gender, password: $password, role: $role, imageUrl: $imageUrl)';
+  }
+}
+
+class ProductModel {
+  // ignore: non_constant_identifier_names
+  final String product_id;
+  final String name;
+  final String color;
+  final String image;
+  final String rate;
+
+  ProductModel({
+    // ignore: non_constant_identifier_names
+    required this.product_id,
+    required this.name,
+    required this.rate,
+    required this.color,
+    required this.image,
+  });
+
+  factory ProductModel.fromJson(Map<String, dynamic> json) {
+    return ProductModel(
+      product_id: json['product_id'] ?? '',
+      name: json['name'] ?? '',
+      rate: json['rate'] ?? '',
+      color: json['color'] ?? '',
+      image: json['image'] ?? '',
+    );
+  }
+  @override
+  String toString() {
+    return 'ProductModel(product_id: $product_id, name: $name, rate: $rate, color: $color, image: $image)';
   }
 }

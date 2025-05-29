@@ -4,6 +4,8 @@ import 'package:chatme/view/src/admin/user_list.dart';
 // import 'package:chatme/view/src/admin/video_player.dart';
 import 'package:chatme/view/src/auth/login.dart';
 import 'package:chatme/view/src/auth/profile.dart';
+import 'package:chatme/view/src/shop/order_list.dart';
+import 'package:chatme/view/src/shop/product_list.dart';
 import 'package:flutter/material.dart';
 // import 'package:video_player/video_player.dart';
 import '../db/db.dart';
@@ -20,6 +22,7 @@ class _AdminhomeState extends State<Adminhome> {
   String? _bodywidget = 'adminhome';
   String? name;
   File? _profile;
+  String head = 'Home';
 
   @override
   void initState() {
@@ -57,9 +60,25 @@ class _AdminhomeState extends State<Adminhome> {
   Widget _getBodyWidget() {
     switch (_bodywidget) {
       case 'adminhome':
+        setState(() {
+          head = 'Home';
+        });
         return const Adminhomepage();
       case 'userlist':
+        setState(() {
+          head = 'User List';
+        });
         return const UserList();
+      case 'productlist':
+        setState(() {
+          head = 'Product List';
+        });
+        return const ProductList();
+      case 'orderlist':
+        setState(() {
+          head = 'Order List';
+        });
+        return const OrderList();
       // case 'video':
       //   return MyVideoPlayer(
       //     VideoPlayerController.networkUrl(
@@ -90,9 +109,9 @@ class _AdminhomeState extends State<Adminhome> {
                 icon: const Icon(Icons.drag_handle_sharp),
                 tooltip: 'Menu',
                 onPressed: () {
-                  final RenderBox overlay =
-                      Overlay.of(context).context.findRenderObject()
-                          as RenderBox;
+                  final RenderBox overlay = Overlay.of(context)
+                      .context
+                      .findRenderObject() as RenderBox;
                   final RenderBox box = context.findRenderObject() as RenderBox;
                   final Offset position = box.localToGlobal(Offset.zero);
 
@@ -125,6 +144,32 @@ class _AdminhomeState extends State<Adminhome> {
                             ),
                             SizedBox(width: 10),
                             Text('User List'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'productlist',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.shopping_bag_rounded,
+                              color: Colors.black,
+                            ),
+                            SizedBox(width: 10),
+                            Text('Product List'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'orderlist',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.production_quantity_limits,
+                              color: Colors.black,
+                            ),
+                            SizedBox(width: 10),
+                            Text('Ordered List'),
                           ],
                         ),
                       ),
@@ -165,91 +210,88 @@ class _AdminhomeState extends State<Adminhome> {
             },
           ),
           centerTitle: true,
-          title: const Text('its Life'),
+          title: Text(head),
           actions: [
             Builder(
-              builder:
-                  (context) => TextButton(
-                    onLongPress: () {
-                      final RenderBox overlay =
-                          Overlay.of(context).context.findRenderObject()
-                              as RenderBox;
-                      final RenderBox box =
-                          context.findRenderObject() as RenderBox;
-                      final Offset position = box.localToGlobal(Offset.zero);
+              builder: (context) => TextButton(
+                onLongPress: () {
+                  final RenderBox overlay = Overlay.of(context)
+                      .context
+                      .findRenderObject() as RenderBox;
+                  final RenderBox box = context.findRenderObject() as RenderBox;
+                  final Offset position = box.localToGlobal(Offset.zero);
 
-                      showMenu(
-                        context: context,
-                        position: RelativeRect.fromLTRB(
-                          position.dx,
-                          position.dy + box.size.height,
-                          overlay.size.width - position.dx,
-                          0,
+                  showMenu(
+                    context: context,
+                    position: RelativeRect.fromLTRB(
+                      position.dx,
+                      position.dy + box.size.height,
+                      overlay.size.width - position.dx,
+                      0,
+                    ),
+                    items: [
+                      const PopupMenuItem(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.power_settings_new,
+                              color: Colors.black,
+                            ),
+                            SizedBox(width: 10),
+                            Text('Logout'),
+                          ],
                         ),
-                        items: [
-                          const PopupMenuItem(
-                            value: 'logout',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.power_settings_new,
-                                  color: Colors.black,
-                                ),
-                                SizedBox(width: 10),
-                                Text('Logout'),
-                              ],
+                      ),
+                    ],
+                  ).then((value) {
+                    if (value == 'logout') {
+                      logout();
+                    }
+                  });
+                },
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Profile()),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  shape: const CircleBorder(),
+                ),
+                child: _profile != null
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 20),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              image: FileImage(_profile!),
+                              fit: BoxFit.cover,
                             ),
                           ),
-                        ],
-                      ).then((value) {
-                        if (value == 'logout') {
-                          logout();
-                        }
-                      });
-                    },
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const Profile()),
-                      );
-                    },
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      shape: const CircleBorder(),
-                    ),
-                    child:
-                        _profile != null
-                            ? Padding(
-                              padding: const EdgeInsets.only(right: 20),
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  image: DecorationImage(
-                                    image: FileImage(_profile!),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                            )
-                            : Padding(
-                              padding: EdgeInsets.zero,
-                              child: Container(
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.grey[300],
-                                ),
-                                child: Icon(
-                                  Icons.person,
-                                  size: 50,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                            ),
-                  ),
+                        ),
+                      )
+                    : Padding(
+                        padding: EdgeInsets.zero,
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.grey[300],
+                          ),
+                          child: Icon(
+                            Icons.person,
+                            size: 50,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ),
+              ),
             ),
           ],
         ),
@@ -301,7 +343,6 @@ class _AdminhomeState extends State<Adminhome> {
                   ),
                 ),
               ),
-
               IconButton(
                 onPressed: () {},
                 icon: const Icon(Icons.filter_sharp, color: Colors.blueGrey),
