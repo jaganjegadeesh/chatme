@@ -26,12 +26,13 @@ class _ProductListState extends State<ProductList> {
 
   Future<void> getProductDatas() async {
     final url = Uri.parse("${Constants.url}shop_product.php?getAllProduct=");
-
     try {
       final response = await http.get(url, headers: {
         "Content-Type": "application/json",
       });
 
+      // ignore: avoid_print
+      print(response);
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
 

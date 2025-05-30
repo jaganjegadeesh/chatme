@@ -3,6 +3,9 @@ import 'package:chatme/constant/const.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class OrderList extends StatefulWidget {
   const OrderList({super.key});
@@ -20,6 +23,140 @@ class _OrderListState extends State<OrderList> {
   void initState() {
     super.initState();
     getOrderDatas();
+  }
+
+  void _generateAndPreviewPdf(
+      Map<String, dynamic> order, List<dynamic> products) {
+    final pdf = pw.Document();
+
+    double totalAmount = 0;
+
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text("Order ID: ${order['id']}",
+                  style: pw.TextStyle(
+                      fontSize: 18, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 8),
+              pw.Text("Name: ${order['name']}"),
+              pw.Text("Phone: ${order['phone']}"),
+              pw.Text("Address: ${order['address']}"),
+              pw.SizedBox(height: 16),
+              pw.Text("Products:",
+                  style: pw.TextStyle(
+                      fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 8),
+              pw.Table(
+                border: pw.TableBorder.all(),
+                defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
+                columnWidths: {
+                  0: const pw.FixedColumnWidth(40),
+                  1: const pw.FlexColumnWidth(),
+                  2: const pw.FixedColumnWidth(50),
+                  3: const pw.FixedColumnWidth(70),
+                  4: const pw.FixedColumnWidth(80),
+                },
+                children: [
+                  // Header row
+                  pw.TableRow(
+                    decoration:
+                        const pw.BoxDecoration(color: PdfColors.grey300),
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Text("S.No",
+                            style:
+                                pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Text("Product",
+                            style:
+                                pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Text("Qty",
+                            style:
+                                pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Text("Rate",
+                            style:
+                                pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Text("Amount",
+                            style:
+                                pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+
+                  // Body rows
+                  ...List.generate(products.length, (index) {
+                    final product = products[index];
+                    final quantity =
+                        int.tryParse(product['quantity'].toString()) ?? 1;
+                    final rate =
+                        double.tryParse(product['rate'].toString()) ?? 0.0;
+                    final amount = quantity * rate;
+                    totalAmount += amount;
+
+                    return pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Text("${index + 1}"),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Text(product['name']),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Text("$quantity"),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Text("Rs. ${rate.toStringAsFixed(2)}"),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Text("Rs. ${amount.toStringAsFixed(2)}"),
+                        ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+              pw.SizedBox(height: 12),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.end,
+                children: [
+                  pw.Text("Total: ",
+                      style: pw.TextStyle(
+                          fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Rs. ${totalAmount.toStringAsFixed(2)}",
+                      style: pw.TextStyle(
+                          fontSize: 14,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.green)),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    // Show PDF preview
+    Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
   }
 
   Future<void> getOrderDatas() async {
@@ -136,10 +273,23 @@ class _OrderListState extends State<OrderList> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Order ID: ${order['id']}",
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Order ID: ${order['id']}",
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.file_download),
+                            onPressed: () {
+                              final products =
+                                  order['products'] as List<dynamic>;
+                              _generateAndPreviewPdf(order, products);
+                            },
+                          )
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text("Name: ${order['name']}"),
@@ -183,7 +333,7 @@ class _OrderListState extends State<OrderList> {
                                 ),
                                 title: Text(product['name']),
                                 subtitle: Text(
-                                    "Rate: ₹${rate.toStringAsFixed(2)} x $quantity = ₹${amount.toStringAsFixed(2)}"),
+                                    "Rate: Rs. ${rate.toStringAsFixed(2)} x $quantity = Rs. ${amount.toStringAsFixed(2)}"),
                               );
                             },
                           ),
@@ -191,7 +341,7 @@ class _OrderListState extends State<OrderList> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "Total Amount: ₹${totalAmount.toStringAsFixed(2)}",
+                        "Total Amount: Rs. ${totalAmount.toStringAsFixed(2)}",
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,

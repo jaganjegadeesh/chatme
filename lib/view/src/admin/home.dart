@@ -106,7 +106,10 @@ class _AdminhomeState extends State<Adminhome> {
           leading: Builder(
             builder: (BuildContext context) {
               return IconButton(
-                icon: const Icon(Icons.drag_handle_sharp),
+                icon: const Icon(
+                  Icons.drag_handle_sharp,
+                  color: Colors.black,
+                ),
                 tooltip: 'Menu',
                 onPressed: () {
                   final RenderBox overlay = Overlay.of(context)
@@ -210,7 +213,10 @@ class _AdminhomeState extends State<Adminhome> {
             },
           ),
           centerTitle: true,
-          title: Text(head),
+          title: Text(
+            head,
+            style: const TextStyle(color: Colors.black),
+          ),
           actions: [
             Builder(
               builder: (context) => TextButton(
